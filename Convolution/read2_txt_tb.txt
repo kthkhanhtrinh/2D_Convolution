@@ -21,16 +21,17 @@
 
 
 module read_txt2_tb;
+
     reg clk;
     reg rst;
-
-    integer i;
-
+    wire [7:0] result;
+    wire [7:0] feature_Map;
     always #5 clk = ~clk;	
     initial 
     begin
         clk = 0;
         rst = 0;
+        
 //        enable_stage1_image = 0;
     #10
         rst = 1;
@@ -40,7 +41,7 @@ module read_txt2_tb;
     $stop;
     end
     
-    read_txt2 inst1(.clk(clk), .rst(rst));
+    read_txt2 inst1(.clk(clk), .rst(rst), .result(result), .feature_Map(feature_Map));
 
     
 endmodule

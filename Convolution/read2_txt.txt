@@ -20,32 +20,27 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-`define IMAGEROW	5
-`define IMAGECOL	5
 `define IMG_SIZE    5
 
-`define KERNELROW	3
-`define KERNELCOL	3
 `define KERNEL_SIZE 3
 
-`define RESROW 		3
-`define RESCOL		3
 `define RES_SIZE    3
 
 
 module read_txt2(
     input wire clk, 
-    input wire rst
+    input wire rst,
+    output wire [7:0] result,
+    output reg [7:0] feature_Map
     );
     integer i;
     /*variable support for multiplication stage*/
     reg enable_convol;
     
-
-    reg [3:0] imageArray [0:24]; 
-    reg [3:0] kernelArray [0:8];
     reg [7:0] resultArray [0:8]; 
-    reg [7:0] feature_Map [0:8]; 
+    reg [3:0] imageArray[0: 24]; 
+    reg [3:0] kernelArray[0: 8];
+//    reg [7:0] feature_Map [0: 8]; 
 
     reg isConvled [0:8];
     
@@ -79,7 +74,7 @@ module read_txt2(
     wire done_row3;
     wire en_sum;
     wire done_sum;
-    
+    reg stop;
     reg done_kernel;
     /*-----------------------*/
     
@@ -119,7 +114,7 @@ module read_txt2(
             if(col_map < `RES_SIZE) begin
                 a <= imageArray[`IMG_SIZE * row_map + col_map + Fr_map + Fc_map*`IMG_SIZE];
                 b <= kernelArray[`KERNEL_SIZE * row_map + col_map];
-                #12 resultArray[`RES_SIZE * row_res + col_res] <= result;// tre xung
+                #12 resultArray[`RES_SIZE * row_res + col_res] <= result;
                
             end
             if(resultArray[`RES_SIZE * row_map + col_map] !== 1'bz) begin
@@ -146,7 +141,7 @@ module read_txt2(
             end
             
             if(row_map == 3) begin
-                enable_convol <= 1'b0; /*swap to adding stage*/
+                enable_convol <= 1'b0; 
                 row_map <= 3'b000;
                 col_map <= 3'b000;
                 isConvled[Fr_map + Fc_map*`RES_SIZE] <= 1'b1;
@@ -154,13 +149,8 @@ module read_txt2(
                 row_res <= 3'b000;
                 col_res <= 3'b000;
 
-                /*Reset variable*/
             end               
-//            $display("result = %d", result);
-//            for (i = 0; i < 9; i = i + 1)
-//                if (resultArray[i] !== 1'bx)
-//                    $display("resultArray[%0d] = %d", i, resultArray[i]); 
-//            $display("\n");
+
         end
         
         if (isConvled[Fr_map + Fc_map*`RES_SIZE]) begin
@@ -168,13 +158,10 @@ module read_txt2(
         end
         
         if (done_sum && begin_adding) begin
-            feature_Map[Fr_map + Fc_map*`RES_SIZE] = tmp_output;
-//            $display("done block 1 kernel * img");
-//            $display("tmp_output = %d", tmp_output);
-            $display("feature map [%0d] = %d",Fr_map + Fc_map*`RES_SIZE + 1,feature_Map[Fr_map + Fc_map*`RES_SIZE]);
-            
+            feature_Map/*[Fr_map + Fc_map*`RES_SIZE]*/ = tmp_output;
+            $display("feature_Map =%d", feature_Map);
+     
             begin_adding = 1'b0;
-//            done_sum_reg <= 1'b0;
 
             for (i = 0; i < 9; i = i + 1)
                 resultArray[i] = 1'bx;
@@ -191,29 +178,20 @@ module read_txt2(
                 enable_convol = 1'b0;
             end 
             enable_convol = 1'b1;
-//            Fc_map <= Fc_map + 1;
 
-//            if(Fc_map == 3) begin
-//                Fc_map <= 3'b000;
-//                Fr_map <= Fr_map + 1;
-//            end
-            
-//            if(Fr_map == 3) begin
-//                done_kernel <= 1'b1;
-//                enable_convol <= 1'b0;
-//            end 
         end
         
         if(done_kernel) begin
+            stop = 1'b1;
             $display("DONE KERNEL * IMG");
-            for(i = 0; i < 9; i = i + 1)
-                $display("feature_Map[%0d] = %d", i + 1,  feature_Map[i]);
-            $stop;
+
         end
+        
+        
 
     end /*end always*/
     assign en_sum = done_row1 && done_row2 && done_row3;
-    initial $readmemb("C:\\Users\\khanh\\image1.txt", imageArray, 0, 24);
+    initial $readmemb("C:\\Users\\khanh\\image.txt", imageArray, 0, 24);
     initial $readmemb("C:\\Users\\khanh\\kernel1.txt", kernelArray, 0, 8);
     initial 
     for(i = 0; i < 9; i = i + 1) begin
