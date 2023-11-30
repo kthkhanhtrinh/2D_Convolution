@@ -34,6 +34,11 @@ module read_txt2(
     output reg [7:0] feature_Map
     );
     integer i;
+    integer fd;
+    
+    initial begin
+        fd = $fopen("C:\\Vivaldo\\Project\\convolResult.txt", "w");
+    end
     /*variable support for multiplication stage*/
     reg enable_convol;
     
@@ -42,7 +47,7 @@ module read_txt2(
     reg [3:0] kernelArray[0: `KERNEL_SIZE * `KERNEL_SIZE - 1];
 //    reg [7:0] feature_Map [0: 8]; 
 
-    reg isConvled [0:8];
+    reg isConvled [0:24];
     
     reg [3:0] a;
     reg [3:0] b;
@@ -115,7 +120,8 @@ module read_txt2(
                 a <= imageArray[`IMG_SIZE * row_map + col_map + Fr_map + Fc_map*`IMG_SIZE];
                 b <= kernelArray[`KERNEL_SIZE * row_map + col_map];
                 #12 resultArray[`KERNEL_SIZE * row_map + col_map] <= result;
-                $display("Index result array = %d", `KERNEL_SIZE * row_map + col_map);
+                
+//                $display("Index result array = %d", `KERNEL_SIZE * row_map + col_map);
                 $display("Result =%d", result);
                
             end
@@ -143,10 +149,6 @@ module read_txt2(
             end
             
             if(row_map == `KERNEL_SIZE) begin
-//                $display("Disable convol");
-                $display("resultArray[3] = %d", resultArray[3]);
-                $display("resultArray[4] = %d", resultArray[4]);
-                $display("resultArray[5] = %d", resultArray[5]);
                 enable_convol <= 1'b0; 
                 row_map <= 3'b000;
                 col_map <= 3'b000;
@@ -160,16 +162,15 @@ module read_txt2(
         end
         
         if (isConvled[Fr_map + Fc_map*`RES_SIZE]) begin
-//            $display("Start adding");
             begin_adding <= 1'b1;
         end
         
         if (done_sum && begin_adding) begin
-            $display("Start assign");
             feature_Map/*[Fr_map + Fc_map*`RES_SIZE]*/ = tmp_output;
             $display("**************************");
             $display("feature_Map =%d", feature_Map);
-     
+            
+            $fwrite(fd, "%d\n", tmp_output);
             begin_adding = 1'b0;
 
             for (i = 0; i < 9; i = i + 1)
@@ -192,7 +193,7 @@ module read_txt2(
         
         if(done_kernel) begin
             stop = 1'b1;
-            $display("DONE KERNEL * IMG");
+//            $display("DONE KERNEL * IMG");
 
         end
         
@@ -203,7 +204,7 @@ module read_txt2(
     initial $readmemb("C:\\Vivaldo\\Project\\image3.txt", imageArray, 0, `IMG_SIZE * `IMG_SIZE - 1);
     initial $readmemb("C:\\Vivaldo\\Project\\kernel1.txt", kernelArray, 0, `KERNEL_SIZE * `KERNEL_SIZE - 1);
     initial 
-    for(i = 0; i < 9; i = i + 1) begin
+    for(i = 0; i < `RES_SIZE * `RES_SIZE; i = i + 1) begin
         isConvled[i] <= 0;
     end
     
